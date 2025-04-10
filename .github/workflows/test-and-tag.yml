@@ -2,9 +2,10 @@ name: Test and Tag
 
 on:
   push:
-    branches: [ main, 'release/**' ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
+    types: [opened, synchronize, labeled]
 
 permissions:
   contents: write
