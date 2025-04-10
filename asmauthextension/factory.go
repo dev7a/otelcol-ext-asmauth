@@ -13,7 +13,7 @@ import (
 
 const (
 	// The value of extension "type" in configuration.
-	typeStr = "asmauth"
+	typeStr = "asmauthextension"
 	// The stability level of the extension.
 	stability = component.StabilityLevelBeta
 )

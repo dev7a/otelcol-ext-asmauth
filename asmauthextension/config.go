@@ -34,6 +34,11 @@ type Config struct {
 	// ClientAuth indicates whether this extension should be used as an auth.Client.
 	// Default: true
 	ClientAuth bool `mapstructure:"client_auth"`
+
+	// HeaderPrefix is the prefix used to identify which keys in the secret should be used as headers.
+	// Only keys with this prefix will be used as headers, with the prefix stripped.
+	// Default: "header_"
+	HeaderPrefix string `mapstructure:"header_prefix"`
 }
 
 // AssumeRoleConfig contains the configuration for assuming an IAM role.
@@ -60,6 +65,11 @@ func (cfg *Config) Validate() error {
 	// Default to client auth if not specified
 	if !cfg.ClientAuth {
 		cfg.ClientAuth = true
+	}
+
+	// Set default header prefix if not specified
+	if cfg.HeaderPrefix == "" {
+		cfg.HeaderPrefix = "header_"
 	}
 
 	return nil

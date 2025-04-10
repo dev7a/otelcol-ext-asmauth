@@ -13,15 +13,17 @@ The following configuration options are available:
   - `sts_region` (optional): The AWS region where the STS endpoint will be used. If not specified, the region from the default AWS configuration chain will be used.
 - `fallback_headers` (optional): Headers to use if the secret cannot be retrieved.
 - `refresh_interval` (optional): The interval at which the secret will be refreshed. Default: 1 minute.
+- `header_prefix` (optional): The prefix used to identify which keys in the secret should be used as headers. Only keys with this prefix will be used as headers, with the prefix stripped. Default: "header_". If set to an empty string, all keys will be used as headers.
 
 ## Example Configuration
 
 ```yaml
 extensions:
-  asmauth:
+  asmauthextension:
     region: us-west-2
     secret_name: my-api-headers
     refresh_interval: 5m
+    header_prefix: "header_"
     fallback_headers:
       User-Agent: otel-collector
     assume_role:
@@ -29,7 +31,7 @@ extensions:
       sts_region: us-east-1
 
 service:
-  extensions: [asmauth]
+  extensions: [asmauthextension]
   pipelines:
     traces:
       receivers: [otlp]
@@ -40,7 +42,7 @@ exporters:
   otlphttp/with_auth:
     endpoint: https://api.example.com/v1/traces
     auth:
-      authenticator: asmauth
+      authenticator: asmauthextension
 ```
 
 ## Secret Format
@@ -49,11 +51,17 @@ The secret in AWS Secrets Manager must be a JSON object with string values. For 
 
 ```json
 {
-  "X-API-Key": "your-api-key",
-  "Authorization": "Bearer your-token",
-  "Custom-Header": "custom-value"
+  "header_X-API-Key": "your-api-key",
+  "header_Authorization": "Bearer your-token",
+  "header_Custom-Header": "custom-value",
+  "other_key": "This will not be sent as a header"
 }
 ```
+
+With the default `header_prefix` configuration, only the keys with the "header_" prefix will be used as headers, with the prefix stripped. The headers sent to the API would be:
+- X-API-Key: your-api-key
+- Authorization: Bearer your-token
+- Custom-Header: custom-value
 
 ## AWS Authentication
 
@@ -81,6 +89,12 @@ The extension automatically refreshes the credentials from AWS Secrets Manager b
 1. Log a warning
 2. Continue using the previously retrieved credentials
 3. If no credentials were previously retrieved, use the fallback headers if provided
+
+## Compatibility
+
+This extension version **v0.2.0** is designed to be compatible with **OpenTelemetry Collector v0.119.0**.
+
+Using it with earlier or later Collector versions may require adjustments or may not be supported.
 
 ## Development
 
