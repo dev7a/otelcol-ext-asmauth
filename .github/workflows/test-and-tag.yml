@@ -1,0 +1,61 @@
+name: Test and Tag
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, labeled]
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-tag:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('asmauthextension/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+
+    - name: Run tests
+      run: |
+        cd asmauthextension
+        go test -v ./...
+
+    - name: Read version from VERSION file
+      id: get_version
+      run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+    - name: Create and push git tag
+      # Only create tag on push to main, not on PRs
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd asmauthextension
+        VERSION=${{ steps.get_version.outputs.VERSION }}
+        TAG="v$VERSION"
+        if git rev-parse "$TAG" >/dev/null 2>&1; then
+          echo "Tag $TAG already exists. Skipping tag creation."
+        else
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+        fi
