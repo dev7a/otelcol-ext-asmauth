@@ -93,27 +93,34 @@ The extension automatically refreshes the credentials from AWS Secrets Manager b
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/dev7a/asmauthextension.git
-   cd asmauthextension
+   git clone https://github.com/dev7a/otelcol-ext-asmauth.git
+   cd otelcol-ext-asmauth
    ```
 
 2. **Install dependencies**
    ```bash
    go mod download
-   go get go.opentelemetry.io/collector/cmd/mdatagen
-   go get github.com/dev7a/asmauthextension
-   go get -t github.com/dev7a/asmauthextension/...
    ```
 
 3. **Generate metadata files**
    ```bash
+   # First, install the mdatagen tool with the appropriate version
+   go get go.opentelemetry.io/collector/cmd/mdatagen@v0.119.0
+   
+   # Then run the generator
    go run go.opentelemetry.io/collector/cmd/mdatagen ./metadata.yaml
+   
+   # Or use the Makefile
+   make generate
    ```
+   
    This will generate several files:
    - documentation.md
    - generated_component_test.go
    - generated_package_test.go
    - internal/metadata/* files
+   
+   > **NOTE:** Make sure to use the mdatagen version that matches your collector's version to avoid compatibility issues. The example above uses v0.119.0.
 
 4. **Build the extension**
    ```bash

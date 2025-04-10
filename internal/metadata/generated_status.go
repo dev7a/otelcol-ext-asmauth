@@ -8,7 +8,7 @@ import (
 
 var (
 	Type      = component.MustNewType("asmauth")
-	ScopeName = "github.com/dev7a/asmauthextension"
+	ScopeName = "github.com/dev7a/otelcol-ext-asmauth"
 )
 
 const (
