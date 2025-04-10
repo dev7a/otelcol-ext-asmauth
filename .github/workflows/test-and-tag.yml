@@ -30,10 +30,11 @@ jobs:
 
     - name: Read version from VERSION file
       id: get_version
-      run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+      run: echo "VERSION=$(cat ../VERSION)" >> $GITHUB_OUTPUT
 
     - name: Create and push git tag
-      if: github.ref == 'refs/heads/main' && success()
+      # Only create tag on push to main, not on PRs
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
