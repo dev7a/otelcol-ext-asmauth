@@ -1,0 +1,13 @@
+default:
+all_set:
+  resource_attributes:
+    aws.region:
+      enabled: true
+    aws.secret_name:
+      enabled: true
+none_set:
+  resource_attributes:
+    aws.region:
+      enabled: false
+    aws.secret_name:
+      enabled: false

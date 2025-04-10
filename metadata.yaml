@@ -1,0 +1,31 @@
+type: asmauth
+
+status:
+  class: extension
+  stability:
+    beta: [extension]
+  distributions: [contrib]
+  codeowners:
+    active: [alessandrobologna]
+
+resource_attributes:
+  aws.region:
+    description: The AWS region where the secret is stored.
+    type: string
+    enabled: true
+
+  aws.secret_name:
+    description: The name of the secret in AWS Secrets Manager.
+    type: string
+    enabled: true
+
+tests:
+  goleak:
+    ignore:
+      top:
+        - "net/http.(*persistConn).writeLoop"
+        - "net/http.(*persistConn).readLoop"
+        - "net/http.(*http2ClientConn).readLoop"
+        - "internal/poll.runtime_pollWait"
+  config:
+    secret_name: test-secret

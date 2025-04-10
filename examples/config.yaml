@@ -1,0 +1,35 @@
+extensions:
+  asmauth:
+    region: us-west-2
+    secret_name: my-api-headers
+    refresh_interval: 5m
+    fallback_headers:
+      User-Agent: otel-collector
+    assume_role:
+      arn: arn:aws:iam::123456789012:role/my-role
+      sts_region: us-east-1
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+  otlphttp/with_auth:
+    endpoint: https://api.example.com/v1/traces
+    auth:
+      authenticator: asmauth
+
+service:
+  extensions: [asmauth]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/with_auth]
