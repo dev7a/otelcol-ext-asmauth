@@ -1,0 +1,27 @@
+=== RUN   TestHeaderPrefix
+=== RUN   TestHeaderPrefix/default_header_prefix
+=== RUN   TestHeaderPrefix/custom_header_prefix
+=== RUN   TestHeaderPrefix/empty_header_prefix_uses_all
+=== RUN   TestHeaderPrefix/prefix_exact_match_no_header_name
+--- PASS: TestHeaderPrefix (0.00s)
+    --- PASS: TestHeaderPrefix/default_header_prefix (0.00s)
+    --- PASS: TestHeaderPrefix/custom_header_prefix (0.00s)
+    --- PASS: TestHeaderPrefix/empty_header_prefix_uses_all (0.00s)
+    --- PASS: TestHeaderPrefix/prefix_exact_match_no_header_name (0.00s)
+=== RUN   TestFallbackHeadersWithPrefix
+--- PASS: TestFallbackHeadersWithPrefix (0.00s)
+=== RUN   TestHeaderPrefixFiltering
+=== RUN   TestHeaderPrefixFiltering/default_header_prefix
+=== RUN   TestHeaderPrefixFiltering/custom_prefix
+=== RUN   TestHeaderPrefixFiltering/empty_prefix_uses_all
+=== RUN   TestHeaderPrefixFiltering/prefix_with_empty_key
+--- PASS: TestHeaderPrefixFiltering (0.00s)
+    --- PASS: TestHeaderPrefixFiltering/default_header_prefix (0.00s)
+    --- PASS: TestHeaderPrefixFiltering/custom_prefix (0.00s)
+    --- PASS: TestHeaderPrefixFiltering/empty_prefix_uses_all (0.00s)
+    --- PASS: TestHeaderPrefixFiltering/prefix_with_empty_key (0.00s)
+PASS
+ok  	github.com/dev7a/otelcol-ext-asmauth	0.360s
+testing: warning: no tests to run
+PASS
+ok  	github.com/dev7a/otelcol-ext-asmauth/internal/metadata	(cached) [no tests to run]

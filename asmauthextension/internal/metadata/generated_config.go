@@ -25,7 +25,7 @@ func (rac *ResourceAttributeConfig) Unmarshal(parser *confmap.Conf) error {
 	return nil
 }
 
-// ResourceAttributesConfig provides config for asmauth resource attributes.
+// ResourceAttributesConfig provides config for asmauthextension resource attributes.
 type ResourceAttributesConfig struct {
 	AwsRegion     ResourceAttributeConfig `mapstructure:"aws.region"`
 	AwsSecretName ResourceAttributeConfig `mapstructure:"aws.secret_name"`

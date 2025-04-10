@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	Type      = component.MustNewType("asmauth")
+	Type      = component.MustNewType("asmauthextension")
 	ScopeName = "github.com/dev7a/otelcol-ext-asmauth"
 )
 
 const (
-	ExtensionStability = component.StabilityLevelBeta
+	ExtensionStability = component.StabilityLevelAlpha
 )

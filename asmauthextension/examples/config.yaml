@@ -1,8 +1,9 @@
 extensions:
-  asmauth:
+  asmauthextension:
     region: us-west-2
     secret_name: my-api-headers
     refresh_interval: 5m
+    header_prefix: "header_"
     fallback_headers:
       User-Agent: otel-collector
     assume_role:
@@ -24,10 +25,10 @@ exporters:
   otlphttp/with_auth:
     endpoint: https://api.example.com/v1/traces
     auth:
-      authenticator: asmauth
+      authenticator: asmauthextension
 
 service:
-  extensions: [asmauth]
+  extensions: [asmauthextension]
   pipelines:
     traces:
       receivers: [otlp]
