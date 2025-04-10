@@ -50,7 +50,7 @@ jobs:
       run: |
         cd asmauthextension
         VERSION=${{ steps.get_version.outputs.VERSION }}
-        TAG="v$VERSION"
+        TAG="$VERSION"
         if git rev-parse "$TAG" >/dev/null 2>&1; then
           echo "Tag $TAG already exists. Skipping tag creation."
         else
