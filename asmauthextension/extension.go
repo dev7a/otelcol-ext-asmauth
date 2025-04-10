@@ -69,7 +69,7 @@ func newAuthenticator(cfg *Config, logger *zap.Logger) (extension.Extension, err
 // Start initializes the AWS client and fetches the initial secret
 func (a *secretsManagerAuthenticator) Start(ctx context.Context, _ component.Host) error {
 	awsConfig, err := a.loadAWSConfig(ctx)
-	if err != nil {
+	if (err != nil) {
 		return fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
@@ -202,10 +202,18 @@ func (rt *secretsManagerRoundTripper) RoundTrip(req *http.Request) (*http.Respon
 	// Clone the request to avoid modifying the original
 	newReq := req.Clone(req.Context())
 
-	// Add all headers from the authenticator
+	// Add headers from the authenticator
 	rt.authenticator.headersMutex.RLock()
+	prefix := rt.authenticator.cfg.HeaderPrefix
 	for key, value := range rt.authenticator.headers {
-		newReq.Header.Set(key, value)
+		// If prefix is empty, use all keys directly as headers
+		if prefix == "" {
+			newReq.Header.Set(key, value)
+		} else if len(key) > len(prefix) && key[:len(prefix)] == prefix {
+			// Otherwise only use keys with the configured prefix, and strip the prefix
+			headerKey := key[len(prefix):]
+			newReq.Header.Set(headerKey, value)
+		}
 	}
 	rt.authenticator.headersMutex.RUnlock()
 

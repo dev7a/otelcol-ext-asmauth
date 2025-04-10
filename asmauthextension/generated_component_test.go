@@ -13,7 +13,7 @@ import (
 )
 
 func TestComponentFactoryType(t *testing.T) {
-	require.Equal(t, "asmauth", NewFactory().Type().String())
+	require.Equal(t, "asmauthextension", NewFactory().Type().String())
 }
 
 func TestComponentConfigStruct(t *testing.T) {

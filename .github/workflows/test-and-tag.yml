@@ -1,0 +1,44 @@
+name: Test and Tag
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-tag:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+
+    - name: Run tests
+      run: go test -v ./...
+
+    - name: Read version from VERSION file
+      id: get_version
+      run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+    - name: Create and push git tag
+      if: github.ref == 'refs/heads/main' && success()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=${{ steps.get_version.outputs.VERSION }}
+        TAG="v$VERSION"
+        if git rev-parse "$TAG" >/dev/null 2>&1; then
+          echo "Tag $TAG already exists. Skipping tag creation."
+        else
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+        fi
