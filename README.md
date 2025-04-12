@@ -1,4 +1,4 @@
-# AWS Secrets Manager Authenticator Extension (ASMAuth)
+# AWS Secrets Manager Authenticator Extension
 
 The AWS Secrets Manager authenticator extension enables authentication for HTTP requests using credentials stored in AWS Secrets Manager. This extension adds headers to outgoing HTTP requests based on secrets retrieved from AWS Secrets Manager.
 
