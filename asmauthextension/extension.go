@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,9 +26,39 @@ import (
 )
 
 var (
-	errSecretNotFound    = errors.New("secret not found in Secrets Manager")
-	errInvalidSecretData = errors.New("invalid secret data: must be a JSON object with string values")
+	errSecretNotFound      = errors.New("secret not found in Secrets Manager")
+	errInvalidSecretData   = errors.New("invalid secret data: must be a JSON object with string values")
+	errInvalidHeaderFormat = errors.New("invalid header format: must be in the form key1=value1,key2=value2")
 )
+
+// parseOtelHeadersFormat parses a string in the format "key1=value1,key2=value2"
+func parseOtelHeadersFormat(headerStr string) (map[string]string, error) {
+	headers := make(map[string]string)
+
+	if headerStr == "" {
+		return headers, nil
+	}
+
+	pairs := strings.Split(headerStr, ",")
+	for _, pair := range pairs {
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) != 2 {
+			return nil, errInvalidHeaderFormat
+		}
+
+		key := strings.TrimSpace(kv[0])
+		value := strings.TrimSpace(kv[1])
+
+		// Check for empty key
+		if key == "" {
+			return nil, errInvalidHeaderFormat
+		}
+
+		headers[key] = value
+	}
+
+	return headers, nil
+}
 
 // secretsManagerAuthenticator implements the extension.Extension interface
 type secretsManagerAuthenticator struct {
@@ -69,7 +100,7 @@ func newAuthenticator(cfg *Config, logger *zap.Logger) (extension.Extension, err
 // Start initializes the AWS client and fetches the initial secret
 func (a *secretsManagerAuthenticator) Start(ctx context.Context, _ component.Host) error {
 	awsConfig, err := a.loadAWSConfig(ctx)
-	if (err != nil) {
+	if err != nil {
 		return fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
@@ -164,13 +195,52 @@ func (a *secretsManagerAuthenticator) fetchHeadersFromAWS(ctx context.Context) e
 		return errSecretNotFound
 	}
 
-	var headers map[string]string
-	if err := json.Unmarshal([]byte(*result.SecretString), &headers); err != nil {
+	var secretData map[string]string
+	if err := json.Unmarshal([]byte(*result.SecretString), &secretData); err != nil {
 		return fmt.Errorf("%w: %w", errInvalidSecretData, err)
 	}
 
+	// Initialize the final headers map
+	finalHeaders := make(map[string]string)
+
+	// Process header_key if specified
+	if a.cfg.HeaderKey != "" {
+		if headerValue, exists := secretData[a.cfg.HeaderKey]; exists {
+			parsedHeaders, err := parseOtelHeadersFormat(headerValue)
+			if err != nil {
+				a.logger.Warn("Failed to parse header_key value", zap.Error(err))
+			} else {
+				// Add parsed headers to finalHeaders
+				for k, v := range parsedHeaders {
+					finalHeaders[k] = v
+				}
+			}
+		} else {
+			a.logger.Warn("Specified header_key not found in secret", zap.String("header_key", a.cfg.HeaderKey))
+		}
+	}
+
+	// Process header_prefix keys
+	prefix := a.cfg.HeaderPrefix
+	if prefix != "" {
+		for key, value := range secretData {
+			if len(key) > len(prefix) && key[:len(prefix)] == prefix {
+				headerKey := key[len(prefix):]
+				// Only set if not already set by header_key (header_key takes precedence)
+				if _, exists := finalHeaders[headerKey]; !exists {
+					finalHeaders[headerKey] = value
+				}
+			}
+		}
+	} else {
+		// If prefix is empty and header_key is not used, use all keys directly
+		if a.cfg.HeaderKey == "" {
+			finalHeaders = secretData
+		}
+	}
+
 	a.headersMutex.Lock()
-	a.headers = headers
+	a.headers = finalHeaders
 	a.headersMutex.Unlock()
 
 	a.logger.Debug("Successfully refreshed authentication headers from Secrets Manager")
@@ -204,16 +274,8 @@ func (rt *secretsManagerRoundTripper) RoundTrip(req *http.Request) (*http.Respon
 
 	// Add headers from the authenticator
 	rt.authenticator.headersMutex.RLock()
-	prefix := rt.authenticator.cfg.HeaderPrefix
 	for key, value := range rt.authenticator.headers {
-		// If prefix is empty, use all keys directly as headers
-		if prefix == "" {
-			newReq.Header.Set(key, value)
-		} else if len(key) > len(prefix) && key[:len(prefix)] == prefix {
-			// Otherwise only use keys with the configured prefix, and strip the prefix
-			headerKey := key[len(prefix):]
-			newReq.Header.Set(headerKey, value)
-		}
+		newReq.Header.Set(key, value)
 	}
 	rt.authenticator.headersMutex.RUnlock()
 

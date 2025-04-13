@@ -14,8 +14,11 @@ The following configuration options are available:
 - `fallback_headers` (optional): Headers to use if the secret cannot be retrieved.
 - `refresh_interval` (optional): The interval at which the secret will be refreshed. Default: 1 minute.
 - `header_prefix` (optional): The prefix used to identify which keys in the secret should be used as headers. Only keys with this prefix will be used as headers, with the prefix stripped. Default: "header_". If set to an empty string, all keys will be used as headers.
+- `header_key` (optional): The key in the secret that contains a string in the format of OTEL_EXPORTER_OTLP_HEADERS (e.g., "api-key=key,other-config-value=value"). If specified, headers will be extracted from this string. Can be used alongside `header_prefix`, in which case headers from `header_key` take precedence for any overlapping header names.
 
-## Example Configuration
+## Example Configurations
+
+### Using header_prefix (Default Approach)
 
 ```yaml
 extensions:
@@ -45,9 +48,68 @@ exporters:
       authenticator: asmauthextension
 ```
 
+### Using header_key
+
+```yaml
+extensions:
+  asmauthextension:
+    region: us-west-2
+    secret_name: my-api-headers
+    refresh_interval: 5m
+    header_key: "otlp_headers"
+    fallback_headers:
+      User-Agent: otel-collector
+
+service:
+  extensions: [asmauthextension]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: []
+      exporters: [otlphttp/with_auth]
+
+exporters:
+  otlphttp/with_auth:
+    endpoint: https://api.example.com/v1/traces
+    auth:
+      authenticator: asmauthextension
+```
+
+### Using Both Approaches
+
+```yaml
+extensions:
+  asmauthextension:
+    region: us-west-2
+    secret_name: my-api-headers
+    refresh_interval: 5m
+    header_prefix: "header_"
+    header_key: "otlp_headers"
+    fallback_headers:
+      User-Agent: otel-collector
+
+service:
+  extensions: [asmauthextension]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: []
+      exporters: [otlphttp/with_auth]
+
+exporters:
+  otlphttp/with_auth:
+    endpoint: https://api.example.com/v1/traces
+    auth:
+      authenticator: asmauthextension
+```
+
 ## Secret Format
 
-The secret in AWS Secrets Manager must be a JSON object with string values. For example:
+The secret in AWS Secrets Manager must be a JSON object with string values. There are two ways to specify headers:
+
+### 1. Using header_prefix (Default)
+
+With this approach, keys in the secret that have the specified prefix will be used as headers:
 
 ```json
 {
@@ -63,6 +125,36 @@ With the default `header_prefix` configuration, only the keys with the "header_"
 - Authorization: Bearer your-token
 - Custom-Header: custom-value
 
+### 2. Using header_key
+
+Alternatively, you can specify a single key that contains a string in the OTEL_EXPORTER_OTLP_HEADERS format:
+
+```json
+{
+  "otlp_headers": "api-key=your-api-key,Authorization=Bearer your-token,Custom-Header=custom-value",
+  "other_data": "This will not be used for headers"
+}
+```
+
+With `header_key: "otlp_headers"`, the extension will parse the value of the "otlp_headers" key and extract the headers. The headers sent to the API would be the same as in the previous example.
+
+### Using Both Approaches
+
+You can also use both approaches together. If there are overlapping header names, the values from `header_key` will take precedence:
+
+```json
+{
+  "otlp_headers": "api-key=value1,X-Custom=value2",
+  "header_X-Custom": "value3",
+  "header_Authorization": "Bearer token"
+}
+```
+
+With both `header_key: "otlp_headers"` and `header_prefix: "header_"`, the headers sent would be:
+- api-key: value1 (from header_key)
+- X-Custom: value2 (from header_key, takes precedence over header_prefix)
+- Authorization: Bearer token (from header_prefix)
+
 ## AWS Authentication
 
 This extension uses the default AWS SDK credentials chain. It can authenticate using:
@@ -74,13 +166,15 @@ This extension uses the default AWS SDK credentials chain. It can authenticate u
 
 You can also use the `assume_role` configuration to assume an IAM role with different permissions.
 
-## Example Use Case
+## Example Use Cases
 
 This extension is useful when:
 
 1. You need to authenticate HTTP exporters with API keys or tokens
 2. You want to centrally manage your authentication credentials in AWS Secrets Manager
 3. You need to securely rotate credentials without restarting the collector
+4. You're migrating from environment variable-based configuration (using `header_key` with the OTEL_EXPORTER_OTLP_HEADERS format)
+5. You need to share header configurations between different systems that use different formats
 
 ## Auto-Refresh Behavior
 
