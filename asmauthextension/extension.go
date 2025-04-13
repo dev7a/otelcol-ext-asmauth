@@ -216,7 +216,9 @@ func (a *secretsManagerAuthenticator) fetchHeadersFromAWS(ctx context.Context) e
 				}
 			}
 		} else {
-			a.logger.Warn("Specified header_key not found in secret", zap.String("header_key", a.cfg.HeaderKey))
+			a.logger.Warn("Specified header_key not found in secret",
+				zap.String("header_key", a.cfg.HeaderKey),
+				zap.String("secret_name", a.cfg.SecretName))
 		}
 	}
 

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2025-04-13
+### Fixed
+- Improved warning log message when `header_key` is not found in the secret by including the secret name.
+
 ## [0.5.0] - 2025-04-13
 ### Added
 - `header_key` feature to support OTEL_EXPORTER_OTLP_HEADERS format
