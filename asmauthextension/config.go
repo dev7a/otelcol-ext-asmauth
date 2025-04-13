@@ -39,6 +39,13 @@ type Config struct {
 	// Only keys with this prefix will be used as headers, with the prefix stripped.
 	// Default: "header_"
 	HeaderPrefix string `mapstructure:"header_prefix"`
+
+	// HeaderKey is the key in the secret that contains a string in the format of OTEL_EXPORTER_OTLP_HEADERS
+	// (e.g., "api-key=key,other-config-value=value"). If specified, headers will be extracted from this string.
+	// Can be used alongside HeaderPrefix, in which case headers from HeaderKey take precedence for any
+	// overlapping header names.
+	// Optional.
+	HeaderKey string `mapstructure:"header_key"`
 }
 
 // AssumeRoleConfig contains the configuration for assuming an IAM role.

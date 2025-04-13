@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2025-04-13
+### Added
+- `header_key` feature to support OTEL_EXPORTER_OTLP_HEADERS format
+- New example configurations demonstrating `header_key` usage
+- Comprehensive tests for the new feature
+
+### Changed
+- Updated documentation to explain the new feature and its usage
+- Improved error handling for header parsing
+
+### Fixed
+- Removed unused code in tests
+
 ## [0.2.0] - 2025-04-10
 ### Added
 - Header prefix feature to selectively include secret keys as headers
