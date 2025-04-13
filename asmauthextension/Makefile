@@ -32,4 +32,5 @@ deps:
 
 # Generate metadata files
 generate:
+	go get go.opentelemetry.io/collector/cmd/mdatagen@v0.119.0
 	go run go.opentelemetry.io/collector/cmd/mdatagen ./metadata.yaml
