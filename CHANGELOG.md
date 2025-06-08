@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2] - 2025-06-08
+
+### Changed
+- Updated `golang.org/x/net` from v0.37.0 to v0.38.0
+- Removed unused indirect dependencies to clean up dependency tree
+
 ## [0.5.1] - 2025-04-13
 ### Fixed
 - Improved warning log message when `header_key` is not found in the secret by including the secret name.
